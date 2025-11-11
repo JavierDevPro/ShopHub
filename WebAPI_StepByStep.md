@@ -74,6 +74,7 @@
         Microsoft.AspNetCore.Authentication.JwtBearer
         Microsoft.AspNetCore.OpenApi
         Swashbuckle.AspNetCore
+        Microsoft.Extensions.Configuration.Abstractions
 ```
 5. Before keep going create the ignore files to work well on any device:
     1. .gitignore

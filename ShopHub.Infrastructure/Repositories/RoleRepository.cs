@@ -18,4 +18,10 @@ public class RoleRepository : IRoleRepository
     {
         return await _dbContext.Roles.ToListAsync();
     }
+
+    public async Task<Role> GetRoleByIdAsync(int roleId)
+    {
+        var role = await _dbContext.Roles.FirstOrDefaultAsync(r => r.Id == roleId);
+        return role;
+    }
 }

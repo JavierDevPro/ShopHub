@@ -1,6 +1,10 @@
+using Microsoft.AspNetCore.Mvc;
+
 namespace ShopHub.Api.Controllers;
 
-public class UserController
+[ApiController]
+[Route("[controller]")]
+public class UserController : ControllerBase
 {
-    
+    //DNS & DPS
 }
