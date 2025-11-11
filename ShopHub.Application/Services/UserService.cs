@@ -39,9 +39,10 @@ public class UserService : IUserService
         throw new NotImplementedException();
     }
 
-    public Task<IEnumerable<UserDto>> GetAllUsersAsync()
+    public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
     {
-        throw new NotImplementedException();
+        var users = await _userRepository.GetAllUsersAsync();
+        return users.Select(MapDto);
     }
 
     public Task<UserDto> GetUserByIdAsync(int id)

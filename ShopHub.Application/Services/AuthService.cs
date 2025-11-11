@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using ShopHub.Application.Dtos.Authentication;
 using ShopHub.Application.Dtos.User;
 using ShopHub.Application.Interfaces;
+using ShopHub.Domain.Entities;
 using ShopHub.Domain.Interfaces;
 
 namespace ShopHub.Application.Services;
@@ -25,24 +26,43 @@ public class AuthService
 
     public async Task<AuthResponseDto?> CreateAsync(CreateUserDto createUserDto)
     {
-        string passwordHash = BCrypt.Net.BCrypt.HashPassword(createUserDto.Password);
+        var createdUserName = await _userRepository.GetUserByUsernameAsync(createUserDto.Username);
+        if (createdUserName == null) return null;
 
-        var createdUser = await _userRepository.GetUserByUsernameAsync(createUserDto.Username); 
+        var user = new User
+        {
+            Username = createUserDto.Username,
+            Email = createUserDto.Email,
+            RoleId = createUserDto.RoleId,
+            CreateDate = DateOnly.FromDateTime(DateTime.Now),
+            UpdatedDate = DateTime.UtcNow,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(createUserDto.Password)
+        };
+        
+        var newUser = await _userRepository.CreateUserAsync(user);
 
         return new AuthResponseDto
         {
-            UserNameOrEmail = (createdUser.Email == null) ? createdUser.Email : createdUser.Username,
-            Role = await GetRoleNameAsync(createdUser.RoleId),
+            UserNameOrEmail = (newUser.Email == null) ? newUser.Email : newUser.Username,
+            Role = await GetRoleNameAsync(newUser.RoleId),
             ExpiresAt = DateTime.UtcNow.AddMinutes(15)
         };
     }
-
     public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
     {
-        // Buscar usuario por username
-        var user = await _userRepository.GetUserByUsernameAsync(dto.UserNameOrEmail);
-        
-        if (user == null) return null;
+        var user = new User();
+        // Buscar usuario
+        switch (await IdentifyLoginType(dto.UserNameOrEmail))
+        {
+            case 1:
+                user = await _userRepository.GetUserByUsernameAsync(dto.UserNameOrEmail);
+                break;
+            case 2:
+                user = await _userRepository.GetUserByUsernameAsync(dto.UserNameOrEmail);
+                break;
+            case 3:
+                return null;
+        }
 
         // Verificar contraseña con BCrypt
         bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
@@ -53,6 +73,7 @@ public class AuthService
         {
             Id = user.Id,
             Username = user.Username,
+            Email = user.Email,
             RoleId = user.RoleId,
             UpdatedDate = user.UpdatedDate,
             CreateDate = user.CreateDate
@@ -103,5 +124,12 @@ public class AuthService
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    private async Task<int> IdentifyLoginType(string nameOrEmail)
+    {
+        if(await _userRepository.GetUserByUsernameAsync(nameOrEmail) == null) return 1;
+        if(await _userRepository.GetUserByEmailAsync(nameOrEmail) == null) return 2;
+        return 3;
     }
 }
