@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ShopHub.Domain.Entities;
 using ShopHub.Domain.Interfaces;
 using ShopHub.Infrastructure.Data;
@@ -13,14 +14,15 @@ public class ProductRepository : IProductRepository
         _dbContext = dbContext;
     }
     
-    public Task<Product> GetProductByIdAsync(int id)
+    public async Task<Product> GetProductByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        var product = await _dbContext.Products.FirstOrDefaultAsync(p => p.Id == id);
+        return product;
     }
 
-    public Task<IEnumerable<Product>> GetAllProductsAsync()
+    public async Task<IEnumerable<Product>> GetAllProductsAsync()
     {
-        throw new NotImplementedException();
+        return await _dbContext.Products.ToListAsync();
     }
 
     public Task<IEnumerable<Product>?> GetProductByNameFilterAsync(string name)
@@ -31,5 +33,12 @@ public class ProductRepository : IProductRepository
     public Task<IEnumerable<Product>> GetProductByCategoryIdAsync(int categoryId)
     {
         throw new NotImplementedException();
+    }
+
+    public async Task<Product> CreateProductAsync(Product product)
+    {
+        _dbContext.Products.Add(product);
+        await _dbContext.SaveChangesAsync();
+        return product;
     }
 }

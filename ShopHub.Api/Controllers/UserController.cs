@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopHub.Application.Interfaces;
 
@@ -16,6 +17,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("getall")]
+    [Authorize]
     public async Task<IActionResult> GetAll()
     {
         var result = await _service.GetAllUsersAsync();
