@@ -17,17 +17,17 @@ public class AuthService
     private readonly IRoleService _roleService;
     private readonly IUserRepository _userRepository;
 
-    public AuthService(IConfiguration configuration, RoleService roleService, IUserRepository userRepository)
+    public AuthService(IConfiguration configuration, IRoleService roleService, IUserRepository userRepository)
     {
-        _userRepository = userRepository;
-        _roleService = roleService;
         _configuration = configuration;
+        _roleService = roleService;
+        _userRepository = userRepository;
     }
 
     public async Task<AuthResponseDto?> CreateAsync(CreateUserDto createUserDto)
     {
         var createdUserName = await _userRepository.GetUserByUsernameAsync(createUserDto.Username);
-        if (createdUserName == null) return null;
+        if (createdUserName != null) return null;
 
         var user = new User
         {
@@ -86,7 +86,7 @@ public class AuthService
         {
             Token = token,
             UserNameOrEmail = user.Username,
-            Role = user.Role.Name,
+            Role = await GetRoleNameAsync(user.RoleId),
             ExpiresAt = DateTime.UtcNow.AddMinutes(15)
         };
     }
